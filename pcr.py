@@ -2,60 +2,68 @@ import cv2
 import pyautogui
 import numpy
 import time
-import math
+from util import *
+from config import *
 
-def show(img):
-    cv2.imshow("img", img)
-    cv2.waitKey(0)
-green = [49, 97, 90]
-blue = [165, 77, 66]
-red = [57, 48, 123]
-fever = [57, 81, 255]
-
-def distance(c1, c2):
-    t = 0.0
-    for i in range(3):
-        t += (c1[i] - c2[i]) ** 2
-    return math.sqrt(t)
-
-def clicks(color) -> int:
-    if distance(color, green) < 10:
-        return 1
-    if distance(color, blue) < 10:
-        return 2
-    if distance(color, red) < 10:
-        return 3
-    return 0
-
-#l3 l2 l1 l0 r0 r1 r2 r3
-pos = [
-    [[502, 476], [502, 748]],
-    [[502, 326], [502, 893]],
-    [[502, 182], [502, 1034]],
-    [[502, 38], [502, 1180]]
-]
 print("3秒后运行")
 time.sleep(3)
 while True:
-    image = pyautogui.screenshot()
-    image = cv2.cvtColor(numpy.array(image), cv2.COLOR_RGB2BGR)
-    image = image[780:1540, 1280:2495]
-    # fever条的最后一格
-    f = image[631, 726]
-    if distance(f, fever) < 150:
+    img = game()
+    if is_end(img):
+        print("游戏结束")
+        exit(0)
+
+    if is_fever(img):
         print("fever")
-        pyautogui.press("A", 120, 0.05)
-        time.sleep(0.82)
+        click(click_left_pos, 210, 0.005)
+        time.sleep(0.9)
         continue
-    for p in pos:
-        left = image[p[0][0], p[0][1]]
-        right = image[p[1][0], p[1][1]]
-        lc = clicks(left)
-        rc = clicks(right)
+    
+    move = []
+    for p in snake_pos:
+        lp, rp = p
+        lc, rc = clicks(img, lp), clicks(img, rp)
+        if lc != 0 and rc != 0:
+            print("识别错误: 左右同时检测到蛇")
+            draw_point(img, lp)
+            draw_text(img, lp, lc)
+            draw_point(img, rp)
+            draw_text(img, rp, rc)
+            show(img)
+        
+        if lc == 0 and rc == 0:
+            move = []
+            break
+
         if lc != 0:
-            pyautogui.press("A", lc, 0.05)
+            move.append([lc, 0])
+            draw_point(img, lp)
+            draw_text(img, lp, lc)
+        elif rc != 0:
+            move.append([0, rc])
+            draw_point(img, rp)
+            draw_text(img, rp, rc)
+    
+    # 过滤掉不足 4 个蛇的识别
+    if len(move) == 0:
+        time.sleep(0.001)
+        # print("!!")
+        continue
+
+    for m in move:
+        lc, rc = m
+        if lc != 0:
+            click(click_left_pos, lc, 0.022)
             print(f"left {lc}")
         if rc != 0:
-            pyautogui.press("D", rc, 0.05)
+            click(click_right_pos, rc, 0.022)
             print(f"right {rc}")
-    time.sleep(0.54)
+    
+    # 保存点击后图片
+    # save_img(game())
+    
+    time.sleep(0.035)
+    
+    # 保存本次识别结果
+    # save_img(img)
+        
