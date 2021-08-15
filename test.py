@@ -21,11 +21,11 @@ def save_game():
 def save_screenshot():
     save_img(screen())
 
-# show_game()
+show_game()
 # save_game()
 # print(is_end(game()))
 # img = game()
 # t = range_check(img, snake_pos[0][0], blue_color, 5)
 # t = clicks(img, snake_pos[0][0])
 # print(t)
-save_screenshot()
+# save_screenshot()
